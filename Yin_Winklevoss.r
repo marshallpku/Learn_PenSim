@@ -1138,8 +1138,8 @@ tab8_2 <- desc %>%
          NCx.EAN.CP = PVFBx.T/(sx[age == 30] * ayxs[age == 65]) * sx,
          
          ALx.PUC = ALx.r.PUC + PVFBx.v + PVFBx.d + PVFBx.s,
-         ALx.EAN.CD = PVFBx.r - NCx.EAN.CD * ax65,
-         ALx.EAN.CP = PVFBx.r - NCx.EAN.CP * ax65s
+         ALx.EAN.CD = PVFBx.T - NCx.EAN.CD * ax65,
+         ALx.EAN.CP = PVFBx.T - NCx.EAN.CP * ax65s
          ) %>%
   filter(age %in% seq(30, 60, 5)) %>% 
   select(age, TCx.v, TCx.d, TCx.s, 
