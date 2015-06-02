@@ -1,4 +1,6 @@
 
+
+library(data.table)
 library(dplyr)
 
 # Let's say we have two df's, a and b, that are both big
@@ -72,5 +74,60 @@ sum(badf.match$x, na.rm=TRUE) # should be same as the merge approach
 # the left join approach
 system.time(badf.lj <- left_join(bdf, adf)) # only 11 secs on my machine
 sum(badf.lj$x, na.rm=TRUE)
+
+
+
+## Experiment with data of vested terms. 
+
+load("term_df.RData")
+
+str(liab.term)
+str(df_wf_term)
+
+
+## merging by match()
+a <- proc.time()
+df_wf_term.match <- df_wf_term
+# now create the index - it doesn't have to be a separate vector, it could be created on the fly within []
+# the left side of match is the "left_join" df, and the right is the df we will look up into
+
+i <- with(df_wf_term[1:1e7], paste(ea, age, year)) # paste is very slow with big dataset. 
+
+idx <- match(with(df_wf_term, paste(ea, age, year, year.term)),
+             with(liab.term, paste(ea, age, year, year.term))) # get index of FIRST occurrence within bdf of an i, j, k combination, for each observation in adf
+max(idx, na.rm=TRUE) # make sure the index doesn't exceed number of records in bdf - we'll use it to look up in bdf
+b <- proc.time()
+b - a #
+ # This takes extremely long, mainly due to the "paste" operation. 
+
+
+## left_join
+system.time(df2 <
+              - left_join(df_wf_term, liab.term)) # 11 secs on office computer.
+rm(df2)
+
+## data.table 1
+system.time( 
+  {x1 <- merge( data.table(df_wf_term, key = "ea,age,year,year.term"),
+          data.table(liab.term,  key = "ea,age,year,year.term"),
+          by = c("ea", "age","year", "year.term"), all.x = TRUE)})
+
+## data.table 2
+system.time( 
+  {df_wf_term <- data.table(df_wf_term, key = "ea,age,year,year.term")
+   liab.term  <- data.table(liab.term,  key = "ea,age,year,year.term")
+   merge(df_wf_term,
+         liab.term,
+         by = c("ea", "age","year", "year.term"), all.x = TRUE)})
+
+
+## data.table 3
+system.time( 
+  {x2 <- merge( data.table(df_wf_term, key = "ea,age,year,year.term"),
+                data.table(liab.term),
+                by = c("ea", "age","year", "year.term"), all.x = TRUE)})
+## data.table 1 and 2 have similar speed.
+## It seems that the bigger the data, the greater advantage data.tabel has over dplyr. 
+
 
 
